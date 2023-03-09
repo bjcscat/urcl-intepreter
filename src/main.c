@@ -4,16 +4,27 @@
 #include <sys/stat.h>
 
 #include "parser.h"
+#include "utilities.h"
 
-int main(void) {
-	//new_instruction("andf ");
-	/*
-	FILE* input_file = fopen("input.urcl", "r");
-	struct stat input_stat;
+int main(int argc, char** argv) {
 
-	int result = stat("input.urcl", &input_stat);
+	if (argc < 2) {
+		puts("Missing file name.");
+		return 1;
+	}
 
-	char* input_buffer = malloc(input_stat.st_size);
+	FILE* input_file = fopen(argv[1], "r");
+
+	if (input_file == NULL) {
+		puts("Failed to open file.");
+		return 1;
+	}
+
+	fseek(input_file, 0L, SEEK_END);
+	size_t size = ftell(input_file);
+	fseek(input_file, 0L, SEEK_SET);
+
+	char* input_buffer = malloc(size + 1);
 	char* base_buffer = input_buffer;
 
 	char tmp_chr = getc(input_file);
@@ -21,7 +32,7 @@ int main(void) {
 					*(input_buffer++) = tmp_chr;
 					tmp_chr = getc(input_file);
 	}
-	*(input_buffer++) = '\0';
+	*input_buffer = '\0';
 
 	input_buffer = base_buffer;
 
@@ -29,22 +40,13 @@ int main(void) {
 
 	// start parsing
 
-	unsigned int instruction_index = 0;
-	char* line = strtok(input_buffer, "\n");
-	while (line != NULL) {
-					char Instruction[7];
-					int scan_result = sscanf(line, "%6s", Instruction);
-					if (scan_result == EOF) {
-									printf("Error reading line");
-									break;
-					}
-					puts(Instruction);
+	struct urcl_parser_state *state = new_urcl_parser(input_buffer);
+	
+	bool parse_success = urcl_parse_instruction(state);
 
-					instruction_index++;
-					line = strtok(NULL, "\n");
+	if (!parse_success) {
+		printf("%s\n", state->fatal_parser_error_src);
 	}
 
-	free(base_buffer);
-	*/
 	return 0;
 }
